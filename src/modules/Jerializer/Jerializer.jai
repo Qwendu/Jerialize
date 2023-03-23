@@ -10,21 +10,10 @@ JerializeFault :: enum
 };
 
 
-Jerializer :: struct(direction : Direction)
-{
-	endian_source : ENDIANNESS;
-	endian_target : ENDIANNESS;
-	max_version : int;
-	#if direction == .Serialize
-	{
-		builder : String_Builder;
-	}else{
-		data : string;
-		cursor : int;
-	}
-};
-
-jerialize :: (obj : *$T, endian := ENDIANNESS.LITTLE, version : int = -1) -> string, JerializeFault
+jerialize :: (
+	obj : *$T,
+	endian := ENDIANNESS.LITTLE,
+	version : int = -1) -> string, JerializeFault
 {
 	ctrl : Jerializer(.Serialize);
 	ctrl.endian_target = endian;
@@ -37,17 +26,23 @@ jerialize :: (obj : *$T, endian := ENDIANNESS.LITTLE, version : int = -1) -> str
 	
 	header_template : JerializerHeader;
 	header_template.endian = ctrl.endian_target;
+
+	res : JerializeFault;
 	if ctrl.endian_source == ctrl.endian_target
 	{
-		serialize(*ctrl, *header_template, endian_swap = false);
-		serialize(*ctrl, obj, endian_swap = false);
+		res = serialize(*ctrl, *header_template, endian_swap = false);
+		if res == .OK  res = serialize(*ctrl, obj, endian_swap = false);
 	}else{
-		serialize(*ctrl, *header_template, endian_swap = true);
-		//print("Swapping endianness\n");
-		serialize(*ctrl, obj, endian_swap = true);
+		res = serialize(*ctrl, *header_template, endian_swap = true);
+		if res == .OK  res = serialize(*ctrl, obj, endian_swap = true);
 	}
-	print("Serialized using version '%' and '%' Endian Format\n", ctrl.max_version, name_Of_Enum(ctrl.endian_target));
 
+	if res != .OK
+	{
+		print("Failed to serialize with error %\n", name_Of_Enum(res));
+	}
+
+	print("Serialized using version '%' and '%' Endian Format\n", ctrl.max_version, name_Of_Enum(ctrl.endian_target));
 
 	default_header : JerializerHeader;
 	<<header = default_header;
@@ -57,28 +52,35 @@ jerialize :: (obj : *$T, endian := ENDIANNESS.LITTLE, version : int = -1) -> str
 	return builder_to_string(*ctrl.builder, do_reset = true, extra_bytes_to_prepend = 0), .OK;
 }
 
-dejerialize :: (obj : *$T, source : string) -> JerializeFault
+dejerialize :: (
+	obj : *$T,
+	source : string) -> JerializeFault
 {
 	ctrl : Jerializer(.Deserialize);
 	ctrl.data = source;
 	if ctrl.data.count < size_of(JerializerHeader)  return .NOT_ENOUGH_SPACE_IN_SOURCE;
-	ctrl.cursor += size_of(JerializerHeader);
-	header_default : JerializerHeader;
+	header_template : JerializerHeader;
 	header : *JerializerHeader = xx ctrl.data.data;
 	for header.magic
 	{
-		if it != header_default.magic[it_index]  return .SOURCE_BUFFER_HEADER_MAGIC_WRONG;
+		if it != header_template.magic[it_index]  return .SOURCE_BUFFER_HEADER_MAGIC_WRONG;
 	}
 	ctrl.endian_source = header.endian;
 	print("Deserialized using header version '%' and '%' Endian Format, local format is '%'\n", header.version, name_Of_Enum(ctrl.endian_source), name_Of_Enum(ctrl.endian_target));
 
-
+	res : JerializeFault;
 	if ctrl.endian_source == ctrl.endian_target
 	{
-		serialize(*ctrl, obj, endian_swap = false);
+		res = serialize(*ctrl, *header_template, endian_swap = false);
+		if res == .OK  res = serialize(*ctrl, obj, endian_swap = false);
 	}else{
-		//print("Swapping endianness\n");
-		serialize(*ctrl, obj, endian_swap = true);
+		res = serialize(*ctrl, *header_template, endian_swap = true);
+		if res == .OK  res = serialize(*ctrl, obj, endian_swap = true);
+	}
+
+	if res != .OK
+	{
+		print("Failed to deserialize with error %\n", name_Of_Enum(res));
 	}
 
 	return .OK;
@@ -110,6 +112,20 @@ ENDIANNESS :: enum u8
 };
 
 #scope_module
+
+Jerializer :: struct(direction : Direction)
+{
+	endian_source : ENDIANNESS;
+	endian_target : ENDIANNESS;
+	max_version : int;
+	#if direction == .Serialize
+	{
+		builder : String_Builder;
+	}else{
+		data : string;
+		cursor : int;
+	}
+};
 
 JerializerHeader :: struct 
 {
