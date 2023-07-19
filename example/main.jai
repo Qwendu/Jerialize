@@ -2,7 +2,7 @@
 #import "Basic";
 #import "Compiler";
 #import "String";
-#import "Jerializer";
+#import,file "../Jerializer.jai";
 
 
 Manager :: struct
