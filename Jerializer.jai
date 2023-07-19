@@ -189,7 +189,7 @@ create_jerialize :: (jerializer : $T/Jerializer, $type_to_serialize : Type, $end
 				{
 					water_mark_to_detect_overlaps_in_struct = it.offset_in_bytes + it.type.runtime_size;
 				}else{
-					assert(!"We dont know the size of this member");
+					assert(false, "We dont know the size of member %\nWe dont know what to do!Stopping", it.name);
 				}
 				version, found_version := version_Of_Member(*it);
 				if found_version
