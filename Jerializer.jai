@@ -270,8 +270,11 @@ DONE
 			integer_size := enum_info.info.runtime_size * 8;
 			print_to_builder(*builder, "\tserialize(ctrl, cast(*u%)obj);", integer_size);
 		}
+		case .VARIANT;
+			var := cast(*Type_Info_Variant)ti;
+			print_to_builder(*builder, "\tserialize(ctrl, cast(*%)obj);\n", Jai.get_type(var.variant_of));
 		case;
-			log("currently not supporting the type %, encountered in %\n", name_Of_Enum(ti.type), ti.name);
+			log("currently not supporting the type %\n", name_Of_Enum(ti.type));
 	}
 	return builder_to_string(*builder);
 };
@@ -303,3 +306,4 @@ name_Of_Enum :: (val : $Enum) -> string
 
 #import "Basic";
 #import "String";
+Jai :: #import "Compiler";

@@ -14,11 +14,19 @@ Manager :: struct
 	// p : *int; // Currently not supporting pointers
 };
 
+Variant_Test :: #type,distinct s64;
+Poly_Test :: struct(n : int)
+{
+	arr : [n] u8;
+}
+
 Entity :: struct 
 {
 	position : Vector2; 
 	health : int; @JerializeVersion(6)
 	max_health : int; @JerializeVersion(5)
+	p : Poly_Test(3);
+	d : Variant_Test;
 };
 Monster :: struct
 {
