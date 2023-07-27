@@ -39,10 +39,10 @@ jerialize :: (
 
 	if res != .OK
 	{
-		log("Failed to serialize with error %\n", name_Of_Enum(res));
+		log("Failed to serialize with error %", name_Of_Enum(res));
 	}
 
-	log("Serialized using version '%' and '%' Endian Format\n", ctrl.max_version, name_Of_Enum(ctrl.endian_target));
+	log("Serialized using version '%' and '%' Endian Format", ctrl.max_version, name_Of_Enum(ctrl.endian_target));
 
 	default_header : JerializerHeader;
 	<<header = default_header;
@@ -66,7 +66,7 @@ dejerialize :: (
 		if it != header_template.magic[it_index]  return .SOURCE_BUFFER_HEADER_MAGIC_WRONG;
 	}
 	ctrl.endian_source = header.endian;
-	log("Deserialized using header version '%' and '%' Endian Format, local format is '%'\n", header.version, name_Of_Enum(ctrl.endian_source), name_Of_Enum(ctrl.endian_target));
+	log("Deserialized using header version '%' and '%' Endian Format, local format is '%'", header.version, name_Of_Enum(ctrl.endian_source), name_Of_Enum(ctrl.endian_target));
 
 	res : JerializeFault;
 	if ctrl.endian_source == ctrl.endian_target
@@ -80,7 +80,7 @@ dejerialize :: (
 
 	if res != .OK
 	{
-		log("Failed to deserialize with error %\n", name_Of_Enum(res));
+		log("Failed to deserialize with error %", name_Of_Enum(res));
 	}
 
 	return .OK;
@@ -274,7 +274,7 @@ DONE
 			var := cast(*Type_Info_Variant)ti;
 			print_to_builder(*builder, "\tserialize(ctrl, cast(*%)obj);\n", Jai.get_type(var.variant_of));
 		case;
-			log("currently not supporting the type %\n", name_Of_Enum(ti.type));
+			log("currently not supporting the type %", name_Of_Enum(ti.type));
 	}
 	return builder_to_string(*builder);
 };
